@@ -1,0 +1,42 @@
+canvas {
+  margin: 1em 0 1em 0;
+  width: 40em;
+  height: 7em;
+  border: 3px solid #FFC7C7;
+  border-radius: 15px;
+}
+
+audio {
+  width: 40em;
+  border-radius: 1px;
+}
+
+.audio-uploader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.audio-input {
+  display: none;
+}
+
+.audio-input-label {
+  margin: 1em 0 0 0;
+  padding: 10px 20px;
+  background-color: #F6F6F6;
+  border-radius: 1.5em;
+  font-weight: bold;
+}
+
+.audio-input-label:active {
+  background-color: #FFC7C7;
+}
+
+.audio-file-name {
+  margin: 0.5em 0 0 0;
+  font-size: 1.5em;
+  font-weight: bold;
+  font-style: italic;
+}
