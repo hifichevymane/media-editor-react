@@ -1,92 +1,67 @@
 import styles from './AudioUploader.module.css';
 
+import WaveSurfer from "wavesurfer.js";
 import { useState, useRef, useEffect, useId } from "react";
 
-const AUDIO_DATA_POINTS_COUNT = 128;
+import PlayBtnIcon from "../../icons/PlayBtnIcon/PlayBtnIcon.jsx";
+import StopBtnIcon from "../../icons/StopBtnIcon/StopBtnIcon.jsx";
+import SkipBtnIcon from "../../icons/SkipBtnIcon/SkipBtnIcon.jsx";
+
+const SKIP_TIME_SECONDS = 10;
 
 export default function AudioUploader() {
-  const [audioFileURL, setAudioFileURL] = useState(null);
-  const [audioFileName, setAudioFileName] = useState(null);
-  const canvasCtx = useRef(null);
-  const audioCtx = useRef(null);
-  const x = useRef(0);
-  const canvasRef = useRef(null);
-  const audioRef = useRef(null);
-  const animationRef = useRef(null);
-  const analyser = useRef(null);
-  const bufferSize = useRef(null);
-  const dataArray = useRef(null);
-  const barWidth = useRef(null);
-  const audioSource = useRef(null);
+  const wavesurfer = useRef(null);
+  const waveformElRef = useRef(null);
   const audioInputId = useId();
+  const [audioFile, setAudioFile] = useState(null);
+  const [audioFileName, setAudioFileName] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    canvasCtx.current = canvasRef.current.getContext("2d");
+    wavesurfer.current = WaveSurfer.create({
+      container: waveformElRef.current,
+      waveColor: '#ddd',
+      progressColor: '#383351',
+      responsive: true,
+      barWidth: 3
+    });
+
+    return () => wavesurfer.current.destroy();
   }, []);
 
   useEffect(() => {
-    if (!audioRef.current) return;
-
-    const ctx = new AudioContext();
-
-    audioRef.current.volume = 0.3;
-    audioRef.current.play();
-    createAudioSource(ctx);
-
-    initBufferSizeDataArrayAndBarWidth();
-    audioCtx.current = ctx;
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    // animate(analyser, bufferSize, dataArray, barWidth);
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [audioFileURL]);
-
-  const createAudioSource = (audioCtx) => {
-    if (!audioSource.current) {
-      analyser.current = audioCtx.createAnalyser();
-      audioSource.current = audioCtx.createMediaElementSource(audioRef.current);
-      audioSource.current.connect(analyser.current);
-      analyser.current.connect(audioCtx.destination);
+    if (audioFile) {
+      const objectURL = URL.createObjectURL(audioFile);
+      wavesurfer.current.stop();
+      wavesurfer.current.load(objectURL);
+      wavesurfer.current.play();
+      setIsPlaying(true);
+      return () => URL.revokeObjectURL(objectURL);
     }
-  };
-
-  const initBufferSizeDataArrayAndBarWidth = () => {
-    analyser.current.fftSize = AUDIO_DATA_POINTS_COUNT;
-    bufferSize.current = analyser.current.frequencyBinCount;
-    dataArray.current = new Uint8Array(bufferSize.current);
-    barWidth.current = canvasRef.current.width / bufferSize.current;
-  };
-
-  const animate = () => {
-    x.current = 0;
-    canvasCtx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-    analyser.current.getByteFrequencyData(dataArray.current);
-    for (let i = 0; i < bufferSize.current; i++) {
-      const barHeight = dataArray.current[i];
-      canvasCtx.current.fillStyle = "white";
-      canvasCtx.current.fillRect(
-        x.current,
-        canvasRef.current.height - barHeight,
-        barWidth.current, barHeight
-      );
-      x.current = x.current + barWidth.current;
-    }
-
-    animationRef.current = requestAnimationFrame(animate);
-  };
+  }, [audioFile]);
 
   const onFileUpload = (e) => {
     const audioFile = e.target.files[0];
     if (!audioFile) return;
 
-    const audioFileURL = URL.createObjectURL(audioFile);
-    setAudioFileURL(audioFileURL);
-
+    setAudioFile(audioFile);
     const audioFileName = audioFile.name;
     const fileNameWithoutExtension = audioFileName.substring(0, audioFileName.length - 4);
     setAudioFileName(fileNameWithoutExtension);
   };
+
+  const onPlayStopBtnClick = async () => {
+    await wavesurfer.current.playPause();
+    setIsPlaying(!isPlaying);
+  }
+
+  const onSkipBackBtnClick = () => {
+    wavesurfer.current.skip(-SKIP_TIME_SECONDS)
+  }
+
+  const onSkipForwardBtnClick = () => {
+    wavesurfer.current.skip(SKIP_TIME_SECONDS)
+  }
 
   return (
     <div className={styles.audioUploader}>
@@ -97,13 +72,24 @@ export default function AudioUploader() {
         onChange={onFileUpload}
         id={audioInputId}
       ></input>
-      <label
-        htmlFor={audioInputId}
-        className={styles.audioInputLabel}
-      >Upload the file</label>
+      <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
       {audioFileName && <span className={styles.audioFileName}>{audioFileName}</span>}
-      <canvas ref={canvasRef} style={{ display: audioFileURL ? 'block' : 'none' }}></canvas>
-      {audioFileURL && <audio controls ref={audioRef} src={audioFileURL} />}
+      <div ref={waveformElRef} className={styles.waveForm}></div>
+      {audioFile && (
+        <div className={styles.controls}>
+          <button
+            className={[styles.controlButton, styles.skipButton].join(' ')}
+            onClick={onSkipBackBtnClick}
+          ><SkipBtnIcon skipType='back'/></button>
+          <button className={styles.controlButton} onClick={onPlayStopBtnClick}>
+            {isPlaying ? <StopBtnIcon/> : <PlayBtnIcon/>}
+          </button>
+          <button
+            className={[styles.controlButton, styles.skipButton].join(' ')}
+            onClick={onSkipForwardBtnClick}
+          ><SkipBtnIcon skipType='forward'/></button>
+        </div>
+      )}
     </div>
   )
 }
