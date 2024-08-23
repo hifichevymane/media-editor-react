@@ -1,0 +1,30 @@
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}
+
+.control-button {
+  margin: 1em 0 0 0;
+  padding: 20px;
+  border: 0;
+  border-radius: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.skip-button {
+  padding: 10px;
+}
+
+.audio-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--color-text);
+}
