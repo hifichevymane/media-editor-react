@@ -70,7 +70,6 @@ export default function AudioUploader() {
   };
 
   const onZoomSliderChange = (e) => {
-    console.log(e.target.valueAsNumber);
     wavesurfer.current.zoom(e.target.valueAsNumber);
   }
 
