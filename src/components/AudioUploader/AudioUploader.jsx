@@ -14,6 +14,8 @@ export default function AudioUploader() {
   const [audioFile, setAudioFile] = useState(null);
   const [audioFileName, setAudioFileName] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
     wavesurfer.current = WaveSurfer.create({
@@ -26,8 +28,22 @@ export default function AudioUploader() {
       autoplay: true,
       dragToSeek: true
     });
+    const unsubscribeReadyEvent = wavesurfer.current.on('ready', () => {
+      setAudioDuration(wavesurfer.current.getDuration());
+    });
+    const unsubscribeTimeupdateEvent = wavesurfer.current.on('timeupdate', (time) => {
+      setCurrentTime(time);
+    });
+    const unsubscribeFinishEvent = wavesurfer.current.on('finish', () => {
+      setIsPlaying(false);
+    });
 
-    return () => wavesurfer.current.destroy();
+    return () => {
+      unsubscribeReadyEvent();
+      unsubscribeTimeupdateEvent();
+      unsubscribeFinishEvent();
+      wavesurfer.current.destroy();
+    };
   }, []);
 
   useEffect(() => {
@@ -71,7 +87,11 @@ export default function AudioUploader() {
 
   const onZoomSliderChange = (e) => {
     wavesurfer.current.zoom(e.target.valueAsNumber);
-  }
+  };
+
+  const onTimeSliderChange = (e) => {
+    wavesurfer.current.setTime(e.target.valueAsNumber);
+  };
 
   return (
     <div className={styles.audioUploader}>
@@ -93,11 +113,14 @@ export default function AudioUploader() {
         audioFile && (
           <MediaControlPanel
             isPlaying={isPlaying}
+            audioDuration={audioDuration}
+            currentTime={currentTime}
             onPlayStopBtnClick={onPlayStopBtnClick}
             onSkipBackBtnClick={onSkipBackBtnClick}
             onSkipForwardBtnClick={onSkipForwardBtnClick}
             onVolumeSliderChange={onVolumeSliderChange}
             onZoomSliderChange={onZoomSliderChange}
+            onTimeSliderChange={onTimeSliderChange}
           />
         )
       }
