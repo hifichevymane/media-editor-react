@@ -21,7 +21,10 @@ export default function AudioUploader() {
       waveColor: '#ddd',
       progressColor: '#383351',
       responsive: true,
-      barWidth: 3
+      barWidth: 3,
+      mediaControls: false,
+      autoplay: true,
+      dragToSeek: true
     });
 
     return () => wavesurfer.current.destroy();
@@ -33,7 +36,6 @@ export default function AudioUploader() {
       wavesurfer.current.stop();
       wavesurfer.current.load(objectURL);
       wavesurfer.current.setVolume(0.8);
-      wavesurfer.current.play();
       setIsPlaying(true);
       return () => URL.revokeObjectURL(objectURL);
     }
@@ -51,7 +53,7 @@ export default function AudioUploader() {
 
   const onPlayStopBtnClick = async () => {
     await wavesurfer.current.playPause();
-    setIsPlaying(!isPlaying);
+    setIsPlaying(wavesurfer.current.isPlaying());
   };
 
   const onSkipBackBtnClick = () => {
@@ -62,10 +64,15 @@ export default function AudioUploader() {
     wavesurfer.current.skip(SKIP_TIME_SECONDS)
   };
 
-  const onVolumeRangeChange = (e) => {
-    const volume = e.target.value / 100;
+  const onVolumeSliderChange = (e) => {
+    const volume = e.target.valueAsNumber / 100;
     wavesurfer.current.setVolume(volume);
   };
+
+  const onZoomSliderChange = (e) => {
+    console.log(e.target.valueAsNumber);
+    wavesurfer.current.zoom(e.target.valueAsNumber);
+  }
 
   return (
     <div className={styles.audioUploader}>
@@ -90,7 +97,8 @@ export default function AudioUploader() {
             onPlayStopBtnClick={onPlayStopBtnClick}
             onSkipBackBtnClick={onSkipBackBtnClick}
             onSkipForwardBtnClick={onSkipForwardBtnClick}
-            onVolumeRangeChange={onVolumeRangeChange}
+            onVolumeSliderChange={onVolumeSliderChange}
+            onZoomSliderChange={onZoomSliderChange}
           />
         )
       }

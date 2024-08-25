@@ -19,7 +19,7 @@
   padding: 10px;
 }
 
-.audio-control {
+.control-group {
   display: flex;
   justify-content: center;
   align-items: center;
