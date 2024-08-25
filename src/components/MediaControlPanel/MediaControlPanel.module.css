@@ -2,7 +2,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1em;
+  flex-direction: column;
 }
 
 .control-button {
@@ -27,4 +27,24 @@
 
 input[type="range"]::-webkit-slider-thumb {
   background-color: var(--color-text);
+}
+
+.control-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}
+
+.time-slider {
+  width: 100%;
+}
+
+.control-time {
+  margin: 1em 0 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  width: 140%;
 }
