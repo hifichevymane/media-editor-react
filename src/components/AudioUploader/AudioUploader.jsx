@@ -3,9 +3,7 @@ import styles from './AudioUploader.module.css';
 import WaveSurfer from "wavesurfer.js";
 import { useState, useRef, useEffect, useId } from "react";
 
-import PlayBtnIcon from "../../icons/PlayBtnIcon/PlayBtnIcon.jsx";
-import StopBtnIcon from "../../icons/StopBtnIcon/StopBtnIcon.jsx";
-import SkipBtnIcon from "../../icons/SkipBtnIcon/SkipBtnIcon.jsx";
+import MediaControlPanel from '../MediaControlPanel/MediaControlPanel.jsx';
 
 const SKIP_TIME_SECONDS = 10;
 
@@ -23,7 +21,10 @@ export default function AudioUploader() {
       waveColor: '#ddd',
       progressColor: '#383351',
       responsive: true,
-      barWidth: 3
+      barWidth: 3,
+      mediaControls: false,
+      autoplay: true,
+      dragToSeek: true
     });
 
     return () => wavesurfer.current.destroy();
@@ -34,7 +35,7 @@ export default function AudioUploader() {
       const objectURL = URL.createObjectURL(audioFile);
       wavesurfer.current.stop();
       wavesurfer.current.load(objectURL);
-      wavesurfer.current.play();
+      wavesurfer.current.setVolume(0.8);
       setIsPlaying(true);
       return () => URL.revokeObjectURL(objectURL);
     }
@@ -52,15 +53,24 @@ export default function AudioUploader() {
 
   const onPlayStopBtnClick = async () => {
     await wavesurfer.current.playPause();
-    setIsPlaying(!isPlaying);
-  }
+    setIsPlaying(wavesurfer.current.isPlaying());
+  };
 
   const onSkipBackBtnClick = () => {
     wavesurfer.current.skip(-SKIP_TIME_SECONDS)
-  }
+  };
 
   const onSkipForwardBtnClick = () => {
     wavesurfer.current.skip(SKIP_TIME_SECONDS)
+  };
+
+  const onVolumeSliderChange = (e) => {
+    const volume = e.target.valueAsNumber / 100;
+    wavesurfer.current.setVolume(volume);
+  };
+
+  const onZoomSliderChange = (e) => {
+    wavesurfer.current.zoom(e.target.valueAsNumber);
   }
 
   return (
@@ -73,23 +83,24 @@ export default function AudioUploader() {
         id={audioInputId}
       ></input>
       <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
-      {audioFileName && <span className={styles.audioFileName}>{audioFileName}</span>}
+      {
+        audioFileName && (
+          <span className={styles.audioFileName}>{audioFileName}</span>
+        )
+      }
       <div ref={waveformElRef} className={styles.waveForm}></div>
-      {audioFile && (
-        <div className={styles.controls}>
-          <button
-            className={[styles.controlButton, styles.skipButton].join(' ')}
-            onClick={onSkipBackBtnClick}
-          ><SkipBtnIcon skipType='back'/></button>
-          <button className={styles.controlButton} onClick={onPlayStopBtnClick}>
-            {isPlaying ? <StopBtnIcon/> : <PlayBtnIcon/>}
-          </button>
-          <button
-            className={[styles.controlButton, styles.skipButton].join(' ')}
-            onClick={onSkipForwardBtnClick}
-          ><SkipBtnIcon skipType='forward'/></button>
-        </div>
-      )}
+      {
+        audioFile && (
+          <MediaControlPanel
+            isPlaying={isPlaying}
+            onPlayStopBtnClick={onPlayStopBtnClick}
+            onSkipBackBtnClick={onSkipBackBtnClick}
+            onSkipForwardBtnClick={onSkipForwardBtnClick}
+            onVolumeSliderChange={onVolumeSliderChange}
+            onZoomSliderChange={onZoomSliderChange}
+          />
+        )
+      }
     </div>
   )
 }
