@@ -37,11 +37,15 @@ export default function AudioUploader() {
     const unsubscribeFinishEvent = wavesurfer.current.on('finish', () => {
       setIsPlaying(false);
     });
+    const unsubscribeDragstartEvent = wavesurfer.current.on('dragstart', muteAudio);
+    const unsubscribeDragendEvent = wavesurfer.current.on('dragend', unmuteAudio);
 
     return () => {
       unsubscribeReadyEvent();
       unsubscribeTimeupdateEvent();
       unsubscribeFinishEvent();
+      unsubscribeDragstartEvent();
+      unsubscribeDragendEvent();
       wavesurfer.current.destroy();
     };
   }, []);
@@ -93,6 +97,14 @@ export default function AudioUploader() {
     wavesurfer.current.setTime(e.target.valueAsNumber);
   };
 
+  const muteAudio = () => {
+    wavesurfer.current.setMuted(true);
+  };
+
+  const unmuteAudio = () => {
+    wavesurfer.current.setMuted(false);
+  };
+
   return (
     <div className={styles.audioUploader}>
       <input
@@ -121,6 +133,8 @@ export default function AudioUploader() {
             onVolumeSliderChange={onVolumeSliderChange}
             onZoomSliderChange={onZoomSliderChange}
             onTimeSliderChange={onTimeSliderChange}
+            muteAudio={muteAudio}
+            unmuteAudio={unmuteAudio}
           />
         )
       }

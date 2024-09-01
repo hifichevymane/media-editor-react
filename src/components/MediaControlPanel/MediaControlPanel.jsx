@@ -27,6 +27,8 @@ export default function MediaControlPanel(props) {
           value={props.currentTime}
           max={props.audioDuration}
           onChange={props.onTimeSliderChange}
+          onMouseDown={props.muteAudio}
+          onMouseUp={props.unmuteAudio}
           className={styles.timeSlider}
         />
         <span>{formatTime(props.audioDuration)}</span>
