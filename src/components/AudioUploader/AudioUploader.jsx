@@ -105,6 +105,7 @@ export default function AudioUploader() {
     wavesurfer.current.setMuted(false);
   };
 
+
   return (
     <div className={styles.audioUploader}>
       <input
