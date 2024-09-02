@@ -1,6 +1,9 @@
 /* eslint-disable react/prop-types */
 import styles from './MediaControlPanel.module.css';
 
+import { useContext, useEffect, useState } from 'react';
+import { WaveSurferContext } from '../AudioUploader/AudioUploader.jsx';
+
 import PlayBtnIcon from "../../icons/PlayBtnIcon/PlayBtnIcon.jsx";
 import StopBtnIcon from "../../icons/StopBtnIcon/StopBtnIcon.jsx";
 import SkipBtnIcon from "../../icons/SkipBtnIcon/SkipBtnIcon.jsx";
@@ -9,8 +12,26 @@ const DEFAULT_VOLUME = 80;
 const MIN_VOLUME_LEVEL = 0;
 const MAX_VOLUME_LEVEL = 100;
 const VOLUME_RANGE_STEP = 5;
+const SKIP_TIME_SECONDS = 10;
 
-export default function MediaControlPanel(props) {
+export default function MediaControlPanel({ audioDuration, isPlaying, changeIsPlaying }) {
+  const wavesurfer = useContext(WaveSurferContext);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  useEffect(() => {
+    const unsubscribeTimeupdateEvent = wavesurfer.current.on('timeupdate', (time) => {
+      setCurrentTime(time);
+    });
+    const unsubscribeFinishEvent = wavesurfer.current.on('finish', () => {
+      changeIsPlaying(false);
+    });
+
+    return () => {
+      unsubscribeTimeupdateEvent();
+      unsubscribeFinishEvent();
+    }
+  }, []);
+
   const formatTime = (durationInSeconds) => {
     const minutes = Math.floor(durationInSeconds / 60);
     const seconds = Math.floor(durationInSeconds % 60);
@@ -18,20 +39,54 @@ export default function MediaControlPanel(props) {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  const onPlayStopBtnClick = async () => {
+    await wavesurfer.current.playPause();
+    changeIsPlaying(wavesurfer.current.isPlaying());
+  };
+
+  const onSkipBackBtnClick = () => {
+    wavesurfer.current.skip(-SKIP_TIME_SECONDS)
+  };
+
+  const onSkipForwardBtnClick = () => {
+    wavesurfer.current.skip(SKIP_TIME_SECONDS)
+  };
+
+  const onVolumeSliderChange = (e) => {
+    const volume = e.target.valueAsNumber / 100;
+    wavesurfer.current.setVolume(volume);
+  };
+
+  const onZoomSliderChange = (e) => {
+    wavesurfer.current.zoom(e.target.valueAsNumber);
+  };
+
+  const onTimeSliderChange = (e) => {
+    wavesurfer.current.setTime(e.target.valueAsNumber);
+  };
+
+  const muteAudio = () => {
+    wavesurfer.current.setMuted(true);
+  };
+
+  const unmuteAudio = () => {
+    wavesurfer.current.setMuted(false);
+  };
+
   return (
     <div className={styles.controls}>
       <div className={styles.controlTime}>
-        <span>{formatTime(props.currentTime)}</span>
+        <span>{formatTime(currentTime)}</span>
         <input
           type='range'
-          value={props.currentTime}
-          max={props.audioDuration}
-          onChange={props.onTimeSliderChange}
-          onMouseDown={props.muteAudio}
-          onMouseUp={props.unmuteAudio}
+          value={currentTime}
+          max={audioDuration}
+          onChange={onTimeSliderChange}
+          onMouseDown={muteAudio}
+          onMouseUp={unmuteAudio}
           className={styles.timeSlider}
         />
-        <span>{formatTime(props.audioDuration)}</span>
+        <span>{formatTime(audioDuration)}</span>
       </div>
       <div className={styles.controlButtons}>
         <div className={styles.controlGroup}>
@@ -41,21 +96,21 @@ export default function MediaControlPanel(props) {
             min={0}
             max={100}
             defaultValue={0}
-            onChange={props.onZoomSliderChange}
+            onChange={onZoomSliderChange}
           />
         </div>
         <button
           className={[styles.controlButton, styles.skipButton].join(' ')}
-          onClick={props.onSkipBackBtnClick}
+          onClick={onSkipBackBtnClick}
         >
           <SkipBtnIcon skipType='back' />
         </button>
-        <button className={styles.controlButton} onClick={props.onPlayStopBtnClick}>
-          {props.isPlaying ? <StopBtnIcon /> : <PlayBtnIcon />}
+        <button className={styles.controlButton} onClick={onPlayStopBtnClick}>
+          {isPlaying ? <StopBtnIcon /> : <PlayBtnIcon />}
         </button>
         <button
           className={[styles.controlButton, styles.skipButton].join(' ')}
-          onClick={props.onSkipForwardBtnClick}
+          onClick={onSkipForwardBtnClick}
         >
           <SkipBtnIcon skipType='forward' />
         </button>
@@ -67,7 +122,7 @@ export default function MediaControlPanel(props) {
             max={MAX_VOLUME_LEVEL}
             step={VOLUME_RANGE_STEP}
             defaultValue={DEFAULT_VOLUME}
-            onChange={props.onVolumeSliderChange}
+            onChange={onVolumeSliderChange}
           />
         </div>
       </div>
