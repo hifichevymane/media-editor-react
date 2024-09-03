@@ -1,0 +1,13 @@
+.control-button {
+  margin: 1em 0 0 0;
+  padding: 20px;
+  border: 0;
+  border-radius: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.skip-button {
+  padding: 10px;
+}

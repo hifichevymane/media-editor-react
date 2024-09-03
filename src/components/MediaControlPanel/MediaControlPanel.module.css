@@ -1,0 +1,23 @@
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.control-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--color-text);
+}
+
+.control-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}

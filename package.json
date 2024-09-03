@@ -1,7 +1,7 @@
 {
   "name": "media-editor-react",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "wavesurfer.js": "^7.8.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
