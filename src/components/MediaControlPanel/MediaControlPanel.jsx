@@ -1,15 +1,19 @@
-/* eslint-disable react/prop-types */
 import styles from './MediaControlPanel.module.css';
 
 import { useContext, useEffect, useState } from 'react';
 import { WaveSurferContext } from '../AudioUploader/AudioUploader.jsx';
+
+import { useDispatch } from 'react-redux';
+import { setIsPlaying } from '../../redux/editor/editorSlice.js';
 
 import AudioTimeSlider from '../AudioTimeSlider/AudioTimeSlider.jsx';
 import ZoomSlider from '../ZoomSlider/ZoomSlider.jsx';
 import AudioTimeControlButtons from '../AudioTimeControlButtons/AudioTimeControlButtons.jsx';
 import VolumeSlider from '../VolumeSlider/VolumeSlider.jsx';
 
-export default function MediaControlPanel({ audioDuration, isPlaying, changeIsPlaying }) {
+export default function MediaControlPanel() {
+  const dispatch = useDispatch();
+
   const wavesurfer = useContext(WaveSurferContext);
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -18,7 +22,7 @@ export default function MediaControlPanel({ audioDuration, isPlaying, changeIsPl
       setCurrentTime(time);
     });
     const unsubscribeFinishEvent = wavesurfer.current.on('finish', () => {
-      changeIsPlaying(false);
+      dispatch(setIsPlaying(false));
     });
 
     return () => {
@@ -29,12 +33,12 @@ export default function MediaControlPanel({ audioDuration, isPlaying, changeIsPl
 
   return (
     <div className={styles.controls}>
-      <AudioTimeSlider currentTime={currentTime} audioDuration={audioDuration} />
+      <AudioTimeSlider currentTime={currentTime} />
       <div className={styles.controlButtons}>
         <div className={styles.controlGroup}>
           <ZoomSlider />
         </div>
-        <AudioTimeControlButtons isPlaying={isPlaying} changeIsPlaying={changeIsPlaying} />
+        <AudioTimeControlButtons />
         <div className={styles.controlGroup}>
           <VolumeSlider />
         </div>
