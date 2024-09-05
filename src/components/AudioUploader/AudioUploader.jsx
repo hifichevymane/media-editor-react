@@ -9,19 +9,22 @@ import {
   createContext
 } from "react";
 
+import { useDispatch } from 'react-redux';
+import { setIsPlaying, setAudioDurationInSeconds } from '../../redux/editor/editorSlice.js';
+
 import MediaControlPanel from '../MediaControlPanel/MediaControlPanel.jsx';
 
 export const WaveSurferContext = createContext()
 
 export default function AudioUploader() {
+  const dispatch = useDispatch();
+
   const wavesurfer = useRef(null);
   const waveformElRef = useRef(null);
   const audioInputId = useId();
 
   const [audioFile, setAudioFile] = useState(null);
   const [audioFileName, setAudioFileName] = useState(null);
-  const [audioDuration, setAudioDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     wavesurfer.current = WaveSurfer.create({
@@ -36,14 +39,14 @@ export default function AudioUploader() {
     });
 
     const unsubscribeReadyEvent = wavesurfer.current.on('ready', () => {
-      setAudioDuration(wavesurfer.current.getDuration());
+      dispatch(setAudioDurationInSeconds(wavesurfer.current.getDuration()));
     });
 
     return () => {
       unsubscribeReadyEvent();
       wavesurfer.current.destroy();
     };
-  }, []);
+  });
 
   useEffect(() => {
     if (audioFile) {
@@ -51,7 +54,7 @@ export default function AudioUploader() {
       wavesurfer.current.stop();
       wavesurfer.current.load(objectURL);
       wavesurfer.current.setVolume(0.8);
-      setIsPlaying(true);
+      dispatch(setIsPlaying(true));
       URL.revokeObjectURL(objectURL);
     }
   }, [audioFile]);
@@ -66,10 +69,6 @@ export default function AudioUploader() {
     setAudioFileName(fileNameWithoutExtension);
   };
 
-  const changeIsPlaying = (value) => {
-    setIsPlaying(value);
-  };
-
   return (
     <WaveSurferContext.Provider value={wavesurfer}>
       <div className={styles.audioUploader}>
@@ -81,21 +80,9 @@ export default function AudioUploader() {
           id={audioInputId}
         ></input>
         <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
-        {
-          audioFileName && (
-            <span className={styles.audioFileName}>{audioFileName}</span>
-          )
-        }
+        {audioFileName && <span className={styles.audioFileName}>{audioFileName}</span>}
         <div ref={waveformElRef} className={styles.waveForm}></div>
-        {
-          audioFile && (
-            <MediaControlPanel
-              audioDuration={audioDuration}
-              isPlaying={isPlaying}
-              changeIsPlaying={changeIsPlaying}
-            />
-          )
-        }
+        {audioFile && <MediaControlPanel />}
       </div>
     </WaveSurferContext.Provider>
   )
