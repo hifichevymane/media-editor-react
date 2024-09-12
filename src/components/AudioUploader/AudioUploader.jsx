@@ -1,6 +1,7 @@
 import styles from './AudioUploader.module.css';
 
 import WaveSurfer from "wavesurfer.js";
+import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js'
 import {
   useState,
   useRef,
@@ -20,6 +21,7 @@ export default function AudioUploader() {
   const dispatch = useDispatch();
 
   const wavesurfer = useRef(null);
+  const regionsPlugin = useRef(null);
   const waveformElRef = useRef(null);
   const audioInputId = useId();
 
@@ -27,6 +29,7 @@ export default function AudioUploader() {
   const [audioFileName, setAudioFileName] = useState(null);
 
   useEffect(() => {
+    regionsPlugin.current = RegionsPlugin.create();
     wavesurfer.current = WaveSurfer.create({
       container: waveformElRef.current,
       waveColor: '#ddd',
@@ -35,16 +38,27 @@ export default function AudioUploader() {
       barWidth: 3,
       mediaControls: false,
       autoplay: true,
-      dragToSeek: true
+      dragToSeek: true,
+      plugins: [regionsPlugin.current]
     });
-
-    const unsubscribeReadyEvent = wavesurfer.current.on('ready', () => {
+    wavesurfer.current.on('ready', () => {
       dispatch(setAudioDurationInSeconds(wavesurfer.current.getDuration()));
     });
 
+    regionsPlugin.current.enableDragSelection({
+      color: 'rgba(255, 63, 230, 0.2)'
+    });
+    regionsPlugin.current.on('region-created', () => {
+      const regions = regionsPlugin.current.getRegions();
+      if (regions.length === 1) return;
+      regions[0].remove();
+    });
+
     return () => {
-      unsubscribeReadyEvent();
+      regionsPlugin.current.unAll();
+      wavesurfer.current.unAll();
       wavesurfer.current.destroy();
+      regionsPlugin.current.destroy();
     };
   });
 
@@ -57,7 +71,7 @@ export default function AudioUploader() {
       dispatch(setIsPlaying(true));
       URL.revokeObjectURL(objectURL);
     }
-  }, [audioFile]);
+  }, [audioFile, dispatch]);
 
   const onFileUpload = (e) => {
     const audioFile = e.target.files[0];
