@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { WaveSurferContext } from "../AudioUploader/AudioUploader";
 
 export default function ZoomSlider() {
-  const wavesurfer = useContext(WaveSurferContext);
+  const { wavesurfer } = useContext(WaveSurferContext);
 
   const onZoomSliderChange = (e) => {
     wavesurfer.current.zoom(e.target.valueAsNumber);

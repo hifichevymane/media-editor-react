@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 
 export default function AudioTimeSlider({ currentTime }) {
   const audioDurationInSeconds = useSelector(state => state.editor.audioDurationInSeconds);
-  const wavesurfer = useContext(WaveSurferContext);
+  const { wavesurfer } = useContext(WaveSurferContext);
 
   const formatTime = (durationInSeconds) => {
     const minutes = Math.floor(durationInSeconds / 60);
