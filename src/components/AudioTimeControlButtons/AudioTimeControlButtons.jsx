@@ -16,7 +16,7 @@ export default function AudioTimeControlButtons() {
   const isPlaying = useSelector(state => state.editor.isPlaying);
   const dispatch = useDispatch();
 
-  const wavesurfer = useContext(WaveSurferContext);
+  const { wavesurfer } = useContext(WaveSurferContext);
 
   const onPlayStopBtnClick = async () => {
     await wavesurfer.current.playPause();

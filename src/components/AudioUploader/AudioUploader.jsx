@@ -10,8 +10,8 @@ import {
   createContext
 } from "react";
 
-import { useDispatch } from 'react-redux';
-import { setIsPlaying, setAudioDurationInSeconds } from '../../redux/editor/editorSlice.js';
+import { useDispatch, useSelector } from 'react-redux';
+import { setIsPlaying, setAudioDurationInSeconds, setFileName } from '../../redux/editor/editorSlice.js';
 
 import MediaControlPanel from '../MediaControlPanel/MediaControlPanel.jsx';
 
@@ -19,6 +19,7 @@ export const WaveSurferContext = createContext()
 
 export default function AudioUploader() {
   const dispatch = useDispatch();
+  const audioFileName = useSelector(state => state.editor.fileName);
 
   const wavesurfer = useRef(null);
   const regionsPlugin = useRef(null);
@@ -26,7 +27,6 @@ export default function AudioUploader() {
   const audioInputId = useId();
 
   const [audioFile, setAudioFile] = useState(null);
-  const [audioFileName, setAudioFileName] = useState(null);
 
   useEffect(() => {
     regionsPlugin.current = RegionsPlugin.create();
@@ -39,6 +39,8 @@ export default function AudioUploader() {
       mediaControls: false,
       autoplay: true,
       dragToSeek: true,
+      backend: 'WebAudio',
+      sampleRate: 44100,
       plugins: [regionsPlugin.current]
     });
     wavesurfer.current.on('ready', () => {
@@ -79,12 +81,11 @@ export default function AudioUploader() {
 
     setAudioFile(audioFile);
     const audioFileName = audioFile.name;
-    const fileNameWithoutExtension = audioFileName.substring(0, audioFileName.length - 4);
-    setAudioFileName(fileNameWithoutExtension);
+    dispatch(setFileName(audioFileName));
   };
 
   return (
-    <WaveSurferContext.Provider value={wavesurfer}>
+    <WaveSurferContext.Provider value={{ regionsPlugin, wavesurfer }}>
       <div className={styles.audioUploader}>
         <input
           className={styles.audioInput}
