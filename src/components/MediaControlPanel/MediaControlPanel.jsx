@@ -37,6 +37,7 @@ export default function MediaControlPanel() {
     return () => {
       unsubscribeTimeupdateEvent();
       unsubscribeFinishEvent();
+      worker.current.onmessage = null;
       worker.current.terminate();
     }
   }, []);

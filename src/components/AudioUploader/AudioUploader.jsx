@@ -62,7 +62,7 @@ export default function AudioUploader() {
       wavesurfer.current.destroy();
       regionsPlugin.current.destroy();
     };
-  });
+  }, []);
 
   useEffect(() => {
     if (audioFile) {
