@@ -1,6 +1,6 @@
 import styles from './MediaControlPanel.module.css';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { WaveSurferContext } from '../AudioUploader/AudioUploader.jsx';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,8 +11,6 @@ import ZoomSlider from '../ZoomSlider/ZoomSlider.jsx';
 import AudioTimeControlButtons from '../AudioTimeControlButtons/AudioTimeControlButtons.jsx';
 import VolumeSlider from '../VolumeSlider/VolumeSlider.jsx';
 
-import * as lame from '@breezystack/lamejs';
-
 export default function MediaControlPanel() {
   const dispatch = useDispatch();
 
@@ -20,8 +18,15 @@ export default function MediaControlPanel() {
 
   const audioFileName = useSelector(state => state.editor.fileName);
   const [currentTime, setCurrentTime] = useState(0);
+  const worker = useRef(null);
 
   useEffect(() => {
+    worker.current = new Worker(
+      new URL('../../workers/convertToMp3.js', import.meta.url),
+      { type: 'module' }
+    );
+    worker.current.onmessage = onConvertToMp3WorkerMessage;
+
     const unsubscribeTimeupdateEvent = wavesurfer.current.on('timeupdate', (time) => {
       setCurrentTime(time);
     });
@@ -32,8 +37,21 @@ export default function MediaControlPanel() {
     return () => {
       unsubscribeTimeupdateEvent();
       unsubscribeFinishEvent();
+      worker.current.terminate();
     }
-  });
+  }, []);
+
+  const onConvertToMp3WorkerMessage = ({ data }) => {
+    const blob = new Blob(data, { type: 'audio/mp3' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `cropped_${audioFileName}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 
   const cutAudio = () => {
     const regions = regionsPlugin.current.getRegions();
@@ -52,43 +70,9 @@ export default function MediaControlPanel() {
       newAudioBuffer.copyToChannel(data, channel);
     }
 
-    const float32ToInt16 = (float32Array) => {
-      const int16Array = new Int16Array(float32Array.length);
-
-      for (let i = 0; i < float32Array.length; i++) {
-        // Scale the float to the range of Int16
-        int16Array[i] = Math.max(-32768, Math.min(32767, float32Array[i] * 32767));
-      }
-
-      return int16Array;
-    }
-
-    const mp3Encoder = new lame.Mp3Encoder(2, sampleRate, 320);
-    const mp3Data = [];
-    const leftChannel = float32ToInt16(newAudioBuffer.getChannelData(0));
-    const rightChannel = float32ToInt16(newAudioBuffer.getChannelData(1));
-    const samplesPerFrame = 1152;
-    const samplesLength = leftChannel.length;
-
-    for (let i = 0; i < samplesLength; i += samplesPerFrame) {
-      const leftChunk = leftChannel.subarray(i, i + samplesPerFrame);
-      const rightChunk = rightChannel.subarray(i, i + samplesPerFrame);
-      const mp3Buf = mp3Encoder.encodeBuffer(leftChunk, rightChunk);
-      if (mp3Buf.length) mp3Data.push(mp3Buf);
-    }
-
-    const mp3End = mp3Encoder.flush();
-    if (mp3End.length) mp3Data.push(mp3End);
-
-    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `cropped_${audioFileName}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const leftChannel = newAudioBuffer.getChannelData(0);
+    const rightChannel = newAudioBuffer.getChannelData(1);
+    worker.current.postMessage({ leftChannel, rightChannel, sampleRate });
   };
 
   return (
