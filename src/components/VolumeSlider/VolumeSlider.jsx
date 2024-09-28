@@ -7,7 +7,7 @@ const MAX_VOLUME_LEVEL = 100;
 const VOLUME_RANGE_STEP = 5;
 
 export default function VolumeSlider() {
-  const wavesurfer = useContext(WaveSurferContext);
+  const { wavesurfer } = useContext(WaveSurferContext);
 
   const onVolumeSliderChange = (e) => {
     const volume = e.target.valueAsNumber / 100;

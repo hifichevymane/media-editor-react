@@ -4,8 +4,11 @@ import styles from './AudioTimeSlider.module.css';
 import { useContext } from 'react';
 import { WaveSurferContext } from '../AudioUploader/AudioUploader';
 
-export default function AudioTimeSlider({ currentTime, audioDuration }) {
-  const wavesurfer = useContext(WaveSurferContext);
+import { useSelector } from 'react-redux';
+
+export default function AudioTimeSlider({ currentTime }) {
+  const audioDurationInSeconds = useSelector(state => state.editor.audioDurationInSeconds);
+  const { wavesurfer } = useContext(WaveSurferContext);
 
   const formatTime = (durationInSeconds) => {
     const minutes = Math.floor(durationInSeconds / 60);
@@ -32,13 +35,13 @@ export default function AudioTimeSlider({ currentTime, audioDuration }) {
       <input
         type='range'
         value={currentTime}
-        max={audioDuration}
+        max={audioDurationInSeconds}
         onChange={onTimeSliderChange}
         onMouseDown={muteAudio}
         onMouseUp={unmuteAudio}
         className={styles.timeSlider}
       />
-      <span>{formatTime(audioDuration)}</span>
+      <span>{formatTime(audioDurationInSeconds)}</span>
     </div>
   );
 }

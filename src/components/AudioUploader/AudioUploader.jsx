@@ -1,6 +1,7 @@
 import styles from './AudioUploader.module.css';
 
 import WaveSurfer from "wavesurfer.js";
+import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js'
 import {
   useState,
   useRef,
@@ -9,21 +10,26 @@ import {
   createContext
 } from "react";
 
+import { useDispatch, useSelector } from 'react-redux';
+import { setIsPlaying, setAudioDurationInSeconds, setFileName } from '../../redux/editor/editorSlice.js';
+
 import MediaControlPanel from '../MediaControlPanel/MediaControlPanel.jsx';
 
 export const WaveSurferContext = createContext()
 
 export default function AudioUploader() {
+  const dispatch = useDispatch();
+  const audioFileName = useSelector(state => state.editor.fileName);
+
   const wavesurfer = useRef(null);
+  const regionsPlugin = useRef(null);
   const waveformElRef = useRef(null);
   const audioInputId = useId();
 
   const [audioFile, setAudioFile] = useState(null);
-  const [audioFileName, setAudioFileName] = useState(null);
-  const [audioDuration, setAudioDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
+    regionsPlugin.current = RegionsPlugin.create();
     wavesurfer.current = WaveSurfer.create({
       container: waveformElRef.current,
       waveColor: '#ddd',
@@ -32,16 +38,29 @@ export default function AudioUploader() {
       barWidth: 3,
       mediaControls: false,
       autoplay: true,
-      dragToSeek: true
+      dragToSeek: true,
+      backend: 'WebAudio',
+      sampleRate: 44100,
+      plugins: [regionsPlugin.current]
+    });
+    wavesurfer.current.on('ready', () => {
+      dispatch(setAudioDurationInSeconds(wavesurfer.current.getDuration()));
     });
 
-    const unsubscribeReadyEvent = wavesurfer.current.on('ready', () => {
-      setAudioDuration(wavesurfer.current.getDuration());
+    regionsPlugin.current.enableDragSelection({
+      color: 'rgba(255, 63, 230, 0.2)'
+    });
+    regionsPlugin.current.on('region-created', () => {
+      const regions = regionsPlugin.current.getRegions();
+      if (regions.length === 1) return;
+      regions[0].remove();
     });
 
     return () => {
-      unsubscribeReadyEvent();
+      regionsPlugin.current.unAll();
+      wavesurfer.current.unAll();
       wavesurfer.current.destroy();
+      regionsPlugin.current.destroy();
     };
   }, []);
 
@@ -51,10 +70,10 @@ export default function AudioUploader() {
       wavesurfer.current.stop();
       wavesurfer.current.load(objectURL);
       wavesurfer.current.setVolume(0.8);
-      setIsPlaying(true);
+      dispatch(setIsPlaying(true));
       URL.revokeObjectURL(objectURL);
     }
-  }, [audioFile]);
+  }, [audioFile, dispatch]);
 
   const onFileUpload = (e) => {
     const audioFile = e.target.files[0];
@@ -62,16 +81,11 @@ export default function AudioUploader() {
 
     setAudioFile(audioFile);
     const audioFileName = audioFile.name;
-    const fileNameWithoutExtension = audioFileName.substring(0, audioFileName.length - 4);
-    setAudioFileName(fileNameWithoutExtension);
-  };
-
-  const changeIsPlaying = (value) => {
-    setIsPlaying(value);
+    dispatch(setFileName(audioFileName));
   };
 
   return (
-    <WaveSurferContext.Provider value={wavesurfer}>
+    <WaveSurferContext.Provider value={{ regionsPlugin, wavesurfer }}>
       <div className={styles.audioUploader}>
         <input
           className={styles.audioInput}
@@ -81,21 +95,9 @@ export default function AudioUploader() {
           id={audioInputId}
         ></input>
         <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
-        {
-          audioFileName && (
-            <span className={styles.audioFileName}>{audioFileName}</span>
-          )
-        }
+        {audioFileName && <span className={styles.audioFileName}>{audioFileName}</span>}
         <div ref={waveformElRef} className={styles.waveForm}></div>
-        {
-          audioFile && (
-            <MediaControlPanel
-              audioDuration={audioDuration}
-              isPlaying={isPlaying}
-              changeIsPlaying={changeIsPlaying}
-            />
-          )
-        }
+        {audioFile && <MediaControlPanel />}
       </div>
     </WaveSurferContext.Provider>
   )
