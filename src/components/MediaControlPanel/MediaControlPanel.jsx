@@ -14,7 +14,7 @@ import VolumeSlider from '../VolumeSlider/VolumeSlider.jsx';
 export default function MediaControlPanel() {
   const dispatch = useDispatch();
 
-  const { wavesurfer, regionsPlugin } = useContext(WaveSurferContext);
+  const { wavesurfer, regionsPlugin, audioFile } = useContext(WaveSurferContext);
 
   const audioFileName = useSelector(state => state.editor.fileName);
   const [currentTime, setCurrentTime] = useState(0);
@@ -54,26 +54,32 @@ export default function MediaControlPanel() {
     URL.revokeObjectURL(url);
   }
 
-  const cutAudio = () => {
-    const regions = regionsPlugin.current.getRegions();
-    if (!regions.length) return;
+  const cutAudio = async () => {
+    try {
+      const regions = regionsPlugin.current.getRegions();
+      if (!regions.length) return;
 
-    const selectedArea = regions[regions.length - 1];
-    const originalAudioBuffer = wavesurfer.current.getDecodedData();
-    const numberOfChannels = originalAudioBuffer.numberOfChannels;
-    const sampleRate = originalAudioBuffer.sampleRate;
-    const length = Math.floor((selectedArea.end - selectedArea.start) * sampleRate);
-    const newAudioBuffer = new AudioBuffer({ numberOfChannels, length, sampleRate });
+      const { start: startTime, end: endTime } = regions[regions.length - 1];
+      const body = new FormData();
+      body.append('file', audioFile);
+      body.append('start_time', startTime);
+      body.append('end_time', endTime);
 
-    for (let channel = 0; channel < numberOfChannels; channel++) {
-      const data = new Float32Array(length);
-      originalAudioBuffer.copyFromChannel(data, channel, selectedArea.start * sampleRate);
-      newAudioBuffer.copyToChannel(data, channel);
+      const response = await fetch('http://localhost:8000/audio/crop-audio', {
+        method: 'POST',
+        body
+      });
+      const blob = await response.blob();
+      const fileURL = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = fileURL;
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(fileURL);
+    } catch (err) {
+      console.error('Failure on cropping audio');
+      console.error(err);
     }
-
-    const leftChannel = newAudioBuffer.getChannelData(0);
-    const rightChannel = newAudioBuffer.getChannelData(1);
-    worker.current.postMessage({ leftChannel, rightChannel, sampleRate });
   };
 
   return (
