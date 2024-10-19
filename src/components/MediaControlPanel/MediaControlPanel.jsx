@@ -10,6 +10,10 @@ import AudioTimeSlider from '../AudioTimeSlider/AudioTimeSlider.jsx';
 import ZoomSlider from '../ZoomSlider/ZoomSlider.jsx';
 import AudioTimeControlButtons from '../AudioTimeControlButtons/AudioTimeControlButtons.jsx';
 import VolumeSlider from '../VolumeSlider/VolumeSlider.jsx';
+import Modal from '../Modal/Modal.jsx';
+
+const MODAL_HEADER_MESSAGE = 'Please wait';
+const MODAL_BODY_MESSAGE = "We're editing your file...";
 
 export default function MediaControlPanel() {
   const dispatch = useDispatch();
@@ -18,6 +22,7 @@ export default function MediaControlPanel() {
 
   const audioFileName = useSelector(state => state.editor.fileName);
   const [currentTime, setCurrentTime] = useState(0);
+  const [openModal, setOpenModal] = useState(false);
   const worker = useRef(null);
 
   useEffect(() => {
@@ -52,12 +57,14 @@ export default function MediaControlPanel() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    setOpenModal(false);
   }
 
   const cutAudio = () => {
     const regions = regionsPlugin.current.getRegions();
     if (!regions.length) return;
 
+    setOpenModal(true);
     const selectedArea = regions[regions.length - 1];
     const originalAudioBuffer = wavesurfer.current.getDecodedData();
     const numberOfChannels = originalAudioBuffer.numberOfChannels;
@@ -77,18 +84,25 @@ export default function MediaControlPanel() {
   };
 
   return (
-    <div className={styles.controls}>
-      <AudioTimeSlider currentTime={currentTime} />
-      <div className={styles.controlButtons}>
-        <div className={styles.controlGroup}>
-          <ZoomSlider />
-        </div>
-        <AudioTimeControlButtons />
-        <button onClick={cutAudio}>Download</button>
-        <div className={styles.controlGroup}>
-          <VolumeSlider />
+    <>
+      <div className={styles.controls}>
+        <AudioTimeSlider currentTime={currentTime} />
+        <div className={styles.controlButtons}>
+          <div className={styles.controlGroup}>
+            <ZoomSlider />
+          </div>
+          <AudioTimeControlButtons />
+          <button onClick={cutAudio} className={styles.downloadBtn}>Download</button>
+          <div className={styles.controlGroup}>
+            <VolumeSlider />
+          </div>
         </div>
       </div>
-    </div>
+      <Modal
+        isOpened={openModal}
+        headerMessage={MODAL_HEADER_MESSAGE}
+        bodyMessage={MODAL_BODY_MESSAGE}
+      />
+    </>
   );
 }

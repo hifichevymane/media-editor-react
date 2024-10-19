@@ -11,7 +11,7 @@
   align-items: center;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
   background-color: var(--color-text);
 }
 
@@ -20,4 +20,15 @@ input[type="range"]::-webkit-slider-thumb {
   justify-content: center;
   align-items: center;
   gap: 1em;
+}
+
+.download-btn {
+  background-color: #00b846;
+  border: 0;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.download-btn:active {
+  background-color: #00ff62;
 }
