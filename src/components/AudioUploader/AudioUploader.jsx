@@ -85,7 +85,7 @@ export default function AudioUploader() {
   };
 
   return (
-    <WaveSurferContext.Provider value={{ regionsPlugin, wavesurfer }}>
+    <WaveSurferContext.Provider value={{ regionsPlugin, wavesurfer, audioFile }}>
       <div className={styles.audioUploader}>
         <input
           className={styles.audioInput}
