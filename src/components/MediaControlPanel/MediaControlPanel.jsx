@@ -1,9 +1,9 @@
 import styles from './MediaControlPanel.module.css';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { WaveSurferContext } from '../AudioUploader/AudioUploader.jsx';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setIsPlaying } from '../../redux/editor/editorSlice.js';
 
 import AudioTimeSlider from '../AudioTimeSlider/AudioTimeSlider.jsx';
@@ -15,18 +15,9 @@ export default function MediaControlPanel() {
   const dispatch = useDispatch();
 
   const { wavesurfer, regionsPlugin, audioFile } = useContext(WaveSurferContext);
-
-  const audioFileName = useSelector(state => state.editor.fileName);
   const [currentTime, setCurrentTime] = useState(0);
-  const worker = useRef(null);
 
   useEffect(() => {
-    worker.current = new Worker(
-      new URL('../../workers/convertToMp3.js', import.meta.url),
-      { type: 'module' }
-    );
-    worker.current.onmessage = onConvertToMp3WorkerMessage;
-
     const unsubscribeTimeupdateEvent = wavesurfer.current.on('timeupdate', (time) => {
       setCurrentTime(time);
     });
@@ -37,22 +28,20 @@ export default function MediaControlPanel() {
     return () => {
       unsubscribeTimeupdateEvent();
       unsubscribeFinishEvent();
-      worker.current.onmessage = null;
-      worker.current.terminate();
     }
   }, []);
 
-  const onConvertToMp3WorkerMessage = ({ data }) => {
-    const blob = new Blob(data, { type: 'audio/mp3' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `cropped_${audioFileName}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }
+  const download = (blob) => {
+    const fileURL = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = fileURL;
+    a.download = 'cropped-audio.mp3';
+    document.body.appendChild(a);
+
+    a.click();
+    a.remove();
+  };
 
   const cutAudio = async () => {
     try {
@@ -69,13 +58,9 @@ export default function MediaControlPanel() {
         method: 'POST',
         body
       });
+
       const blob = await response.blob();
-      const fileURL = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = fileURL;
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(fileURL);
+      download(blob);
     } catch (err) {
       console.error('Failure on cropping audio');
       console.error(err);
