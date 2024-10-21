@@ -1,15 +1,18 @@
-import styles from './Modal.module.css';
+import './Modal.module.css';
 
+import { forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 
-export default function Modal({ isOpened, headerMessage, bodyMessage }) {
+function Modal(props, ref) {
+  const { headerMessage, bodyMessage } = props;
+
   return createPortal(
-    <div className={styles.overlay} style={{ display: !isOpened ? 'none' : 'block' }}>
-      <div className={styles.modal}>
-        <h2>{headerMessage}</h2>
-        <p>{bodyMessage}</p>
-      </div>
-    </div>,
+    <dialog ref={ref}>
+      <h2>{headerMessage}</h2>
+      <p>{bodyMessage}</p>
+    </dialog>,
     document.getElementById('modal')
   );
 }
+
+export default forwardRef(Modal);

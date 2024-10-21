@@ -1,6 +1,6 @@
 import styles from './DownloadButton.module.css';
 
-import { useState, useContext } from "react";
+import { useContext, useRef } from "react";
 import { WaveSurferContext } from "../AudioUploader/AudioUploader";
 
 import Modal from "../Modal/Modal";
@@ -10,14 +10,14 @@ const MODAL_BODY_MESSAGE = "We're editing your file...";
 
 export default function DownloadButton() {
   const { regionsPlugin, audioFile } = useContext(WaveSurferContext);
-  const [openModal, setOpenModal] = useState(false);
+  const modal = useRef(null);
 
   const cutAudio = async () => {
     try {
       const regions = regionsPlugin.current.getRegions();
       if (!regions.length) return;
 
-      setOpenModal(true);
+      modal.current.showModal();
       const { start: startTime, end: endTime } = regions[regions.length - 1];
       const body = new FormData();
       body.append('file', audioFile);
@@ -43,18 +43,18 @@ export default function DownloadButton() {
     const a = document.createElement('a');
     a.href = fileURL;
     a.download = 'cropped-audio.mp3';
-    document.body.appendChild(a);
+    document.body.append(a);
 
     a.click();
     a.remove();
-    setOpenModal(false);
+    modal.current.close();
   };
 
   return (
     <>
       <button onClick={cutAudio} className={styles.downloadBtn}>Download</button>
       <Modal
-        isOpened={openModal}
+        ref={modal}
         headerMessage={MODAL_HEADER_MESSAGE}
         bodyMessage={MODAL_BODY_MESSAGE}
       />
