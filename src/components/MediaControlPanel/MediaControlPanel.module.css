@@ -11,7 +11,7 @@
   align-items: center;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
   background-color: var(--color-text);
 }
 

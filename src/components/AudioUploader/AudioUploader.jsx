@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setIsPlaying, setAudioDurationInSeconds, setFileName } from '../../redux/editor/editorSlice.js';
 
 import MediaControlPanel from '../MediaControlPanel/MediaControlPanel.jsx';
+import DownloadButton from '../DownloadButton/DownloadButton.jsx';
 
 export const WaveSurferContext = createContext()
 
@@ -94,7 +95,10 @@ export default function AudioUploader() {
           onChange={onFileUpload}
           id={audioInputId}
         ></input>
-        <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
+        <div className={styles.uploadDownload}>
+          <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
+          {audioFile && <DownloadButton />}
+        </div>
         {audioFileName && <span className={styles.audioFileName}>{audioFileName}</span>}
         <div ref={waveformElRef} className={styles.waveForm}></div>
         {audioFile && <MediaControlPanel />}

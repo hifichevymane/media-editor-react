@@ -10,15 +10,14 @@
 }
 
 .audio-input-label {
-  margin: 1em 0 0 0;
   padding: 10px 20px;
-  background-color: #F6F6F6;
+  background-color: #f6f6f6;
   border-radius: 1.5em;
   font-weight: bold;
 }
 
 .audio-input-label:active {
-  background-color: #FFC7C7;
+  background-color: #ffc7c7;
 }
 
 .audio-file-name {
@@ -31,4 +30,10 @@
 .wave-form {
   margin: 1em 0 0 0;
   width: 50%;
+}
+
+.upload-download {
+  display: flex;
+  margin-top: 15px;
+  gap: 15px;
 }

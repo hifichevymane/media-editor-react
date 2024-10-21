@@ -1,0 +1,10 @@
+.download-btn {
+  background-color: #00b846;
+  border: 0;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.download-btn:active {
+  background-color: #00ff62;
+}
