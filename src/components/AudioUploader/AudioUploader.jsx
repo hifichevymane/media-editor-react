@@ -46,11 +46,15 @@ export default function AudioUploader() {
     });
     wavesurfer.current.on('ready', () => {
       dispatch(setAudioDurationInSeconds(wavesurfer.current.getDuration()));
+      const audioBuffer = wavesurfer.current.getDecodedData();
+      // Add a selectable region by default
+      regionsPlugin.current.addRegion({
+        start: 0,
+        end: audioBuffer.duration
+      });
     });
 
-    regionsPlugin.current.enableDragSelection({
-      color: 'rgba(255, 63, 230, 0.2)'
-    });
+    regionsPlugin.current.enableDragSelection();
     regionsPlugin.current.on('region-created', () => {
       const regions = regionsPlugin.current.getRegions();
       if (regions.length === 1) return;
