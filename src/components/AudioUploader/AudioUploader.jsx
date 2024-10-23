@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setIsPlaying, setAudioDurationInSeconds, setFileName } from '../../redux/editor/editorSlice.js';
 
 import MediaControlPanel from '../MediaControlPanel/MediaControlPanel.jsx';
+import DownloadButton from '../DownloadButton/DownloadButton.jsx';
 
 export const WaveSurferContext = createContext()
 
@@ -45,11 +46,15 @@ export default function AudioUploader() {
     });
     wavesurfer.current.on('ready', () => {
       dispatch(setAudioDurationInSeconds(wavesurfer.current.getDuration()));
+      const audioBuffer = wavesurfer.current.getDecodedData();
+      // Add a selectable region by default
+      regionsPlugin.current.addRegion({
+        start: 0,
+        end: audioBuffer.duration
+      });
     });
 
-    regionsPlugin.current.enableDragSelection({
-      color: 'rgba(255, 63, 230, 0.2)'
-    });
+    regionsPlugin.current.enableDragSelection();
     regionsPlugin.current.on('region-created', () => {
       const regions = regionsPlugin.current.getRegions();
       if (regions.length === 1) return;
@@ -85,7 +90,7 @@ export default function AudioUploader() {
   };
 
   return (
-    <WaveSurferContext.Provider value={{ regionsPlugin, wavesurfer }}>
+    <WaveSurferContext.Provider value={{ regionsPlugin, wavesurfer, audioFile }}>
       <div className={styles.audioUploader}>
         <input
           className={styles.audioInput}
@@ -94,7 +99,10 @@ export default function AudioUploader() {
           onChange={onFileUpload}
           id={audioInputId}
         ></input>
-        <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
+        <div className={styles.uploadDownload}>
+          <label htmlFor={audioInputId} className={styles.audioInputLabel}>Upload the file</label>
+          {audioFile && <DownloadButton />}
+        </div>
         {audioFileName && <span className={styles.audioFileName}>{audioFileName}</span>}
         <div ref={waveformElRef} className={styles.waveForm}></div>
         {audioFile && <MediaControlPanel />}
