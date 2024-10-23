@@ -1,0 +1,22 @@
+.navbar {
+  background-color: var(--color-text);
+  padding: 25px 0;
+}
+
+.navbar ul {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3em;
+}
+
+a {
+  text-decoration: none;
+  outline: none;
+  color: var(--color-other);
+  font-size: 1em;
+  font-weight: 600;
+}
+a:hover {
+  color: var(--color-main);
+}
