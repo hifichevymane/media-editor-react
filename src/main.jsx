@@ -9,11 +9,13 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HomePage from './pages/HomePage/HomePage.jsx';
 import AboutPage from './pages/AboutPage/AboutPage.jsx';
 import MyFilesPage from './pages/MyFilesPage/MyFilesPage.jsx';
+import NotFoundPage from './pages/NotFoundPage/NotFoundPage.jsx';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <HomePage />
+    element: <HomePage />,
+    errorElement: <NotFoundPage />
   },
   {
     path: '/about',
